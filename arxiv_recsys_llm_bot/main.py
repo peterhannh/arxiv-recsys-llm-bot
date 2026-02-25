@@ -3,6 +3,7 @@
 import argparse
 import sys
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 from google import genai
 
@@ -84,7 +85,7 @@ def main():
 
     # 6. Send email
     if not args.dry_run and not args.no_email:
-        today = datetime.now(timezone.utc).strftime("%b %d")
+        today = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%b %d")
         subject = f"RecSys & LLM Industry Papers - {today} ({len(industry_papers)} papers)"
         if send_email(html_report, subject):
             log.info("Done! Check your inbox.")

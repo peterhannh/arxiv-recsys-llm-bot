@@ -2,6 +2,7 @@
 
 import html
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 
 def format_email_html(
@@ -10,7 +11,7 @@ def format_email_html(
     cutoff: datetime,
 ) -> str:
     """Create a nicely formatted HTML email."""
-    today = datetime.now(timezone.utc).strftime("%B %d, %Y")
+    today = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%B %d, %Y")
     since = cutoff.strftime("%b %d")
 
     papers_html = ""

@@ -3,6 +3,7 @@
 import json
 import smtplib
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from email.message import EmailMessage
 from pathlib import Path
 
@@ -59,7 +60,7 @@ def save_report(html_content: str, industry_papers: list[dict]) -> Path:
     report_dir = Path(__file__).resolve().parent.parent / "reports"
     report_dir.mkdir(exist_ok=True)
 
-    date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    date_str = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
 
     html_path = report_dir / f"recsys-llm-industry-{date_str}.html"
     html_path.write_text(html_content, encoding="utf-8")
