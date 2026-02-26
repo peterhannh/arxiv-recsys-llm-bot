@@ -13,6 +13,9 @@ RECIPIENT_EMAIL = os.environ.get("RECIPIENT_EMAIL", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "")
 GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
 
+# Semantic Scholar API key (optional — works without it but rate limits are lower)
+S2_API_KEY = os.environ.get("S2_API_KEY", "")
+
 # Max Gemini API calls allowed (hard cap)
 MAX_GEMINI_CALLS = int(os.environ.get("MAX_GEMINI_CALLS", "80"))
 
@@ -49,6 +52,29 @@ SEARCH_QUERIES = [
     # --- LLM as Judge / Evaluator for ranking ---
     'all:"LLM" AND all:"relevance" AND all:"search"',
 ]
+
+# ---------------------------------------------------------------------------
+# Semantic Scholar search queries (broader text search, fewer queries needed)
+# ---------------------------------------------------------------------------
+S2_SEARCH_QUERIES = [
+    "recommendation system OR recommender system",
+    "collaborative filtering OR click-through rate prediction",
+    "learning to rank OR information retrieval",
+    "large language model recommendation OR LLM ranking",
+    "retrieval-augmented generation OR generative retrieval",
+    "dense retrieval OR neural information retrieval",
+]
+
+# ---------------------------------------------------------------------------
+# HuggingFace Daily Papers — relevance filter keywords
+# ---------------------------------------------------------------------------
+HF_RELEVANCE_KEYWORDS = {
+    "recommendation", "recommender", "retrieval", "ranking", "recsys",
+    "collaborative filtering", "click-through", "ctr", "information retrieval",
+    "llm", "large language model", "rag", "dense retrieval",
+    "retrieval-augmented", "generative retrieval", "learning to rank",
+    "search", "query", "re-ranking", "reranking", "neural retrieval",
+}
 
 # ---------------------------------------------------------------------------
 # Logging

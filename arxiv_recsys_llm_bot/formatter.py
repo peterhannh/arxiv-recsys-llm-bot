@@ -39,6 +39,26 @@ def format_email_html(
                 f' font-weight: 600;">{company_safe}</span>'
             )
 
+        # HF trending badge — shown when paper has HuggingFace upvotes
+        hf_html = ""
+        hf_upvotes = p.get("hf_upvotes", 0)
+        if hf_upvotes and hf_upvotes > 0:
+            hf_html = (
+                f'<span style="background: #fce7f3; color: #9d174d; font-size: 11px;'
+                f' padding: 2px 8px; border-radius: 10px; margin-left: 4px;'
+                f' font-weight: 600;">&#x1F525; {hf_upvotes} HF</span>'
+            )
+
+        # S2-only badge — papers discovered via Semantic Scholar (not on ArXiv)
+        s2_html = ""
+        source = p.get("source", "")
+        if source == "s2":
+            s2_html = (
+                '<span style="background: #e0e7ff; color: #3730a3; font-size: 11px;'
+                ' padding: 2px 8px; border-radius: 10px; margin-left: 4px;'
+                ' font-weight: 600;">S2</span>'
+            )
+
         papers_html += f"""
         <tr>
             <td style="padding: 16px 20px; border-bottom: 1px solid #e5e7eb;">
@@ -47,7 +67,7 @@ def format_email_html(
                                  padding: 2px 8px; border-radius: 10px; font-weight: 600;">
                         #{i}
                     </span>
-                    {company_html}
+                    {company_html}{hf_html}{s2_html}
                 </div>
                 <a href="{url_safe}" style="color: #1d4ed8; text-decoration: none;
                           font-size: 16px; font-weight: 600; line-height: 1.4;">

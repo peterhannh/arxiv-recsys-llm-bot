@@ -1,5 +1,6 @@
 """Fetch recent RecSys & LLM papers from ArXiv."""
 
+import re
 import time
 from datetime import datetime, timezone
 
@@ -30,6 +31,8 @@ def fetch_recent_papers(cutoff: datetime) -> list[dict]:
             )
             for result in client.results(search):
                 paper_id = result.entry_id.split("/abs/")[-1]
+                # Strip version suffix (e.g., v1, v2) for consistent dedup
+                paper_id = re.sub(r"v\d+$", "", paper_id)
                 if paper_id in seen_ids:
                     continue
                 seen_ids.add(paper_id)
@@ -53,6 +56,7 @@ def fetch_recent_papers(cutoff: datetime) -> list[dict]:
                         "url": result.entry_id,
                         "pdf_url": result.pdf_url,
                         "comment": (result.comment or "").replace("\n", " ").strip(),
+                        "source": "arxiv",
                     }
                 )
         except arxiv.HTTPError as e:
