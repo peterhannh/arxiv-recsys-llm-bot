@@ -29,28 +29,21 @@ STATE_FILE = Path(__file__).resolve().parent.parent / "state.json"
 # ArXiv search queries — RecSys + LLM research
 # ---------------------------------------------------------------------------
 SEARCH_QUERIES = [
-    # --- Recommendation Systems ---
+    # --- Core RecSys ---
     'all:"recommendation system" OR all:"recommender system"',
     'all:"collaborative filtering"',
     'all:"click-through rate" OR all:"CTR prediction"',
     'all:"learning to rank"',
-    'all:"information retrieval" AND cat:cs.IR',
 
-    # --- LLM + RecSys / Ranking / Retrieval ---
+    # --- RecSys × LLM ---
     'all:"large language model" AND all:"recommendation"',
     'all:"LLM" AND all:"ranking"',
-    'all:"large language model" AND all:"retrieval"',
+    'all:"LLM" AND (all:"reranking" OR all:"re-ranking")',
+    'all:"generative recommendation"',
 
-    # --- RAG & Generative Retrieval ---
-    'all:"retrieval-augmented generation"',
+    # --- LLM for retrieval (RecSys-adjacent) ---
+    'all:"large language model" AND all:"information retrieval"',
     'all:"generative retrieval"',
-
-    # --- Dense / Neural Retrieval ---
-    'all:"dense retrieval"',
-    'all:"neural information retrieval"',
-
-    # --- LLM as Judge / Evaluator for ranking ---
-    'all:"LLM" AND all:"relevance" AND all:"search"',
 ]
 
 # ---------------------------------------------------------------------------
@@ -59,21 +52,21 @@ SEARCH_QUERIES = [
 S2_SEARCH_QUERIES = [
     "recommendation system OR recommender system",
     "collaborative filtering OR click-through rate prediction",
-    "learning to rank OR information retrieval",
+    "learning to rank",
     "large language model recommendation OR LLM ranking",
-    "retrieval-augmented generation OR generative retrieval",
-    "dense retrieval OR neural information retrieval",
+    "LLM reranking OR generative recommendation",
+    "large language model information retrieval OR generative retrieval",
 ]
 
 # ---------------------------------------------------------------------------
 # HuggingFace Daily Papers — relevance filter keywords
 # ---------------------------------------------------------------------------
 HF_RELEVANCE_KEYWORDS = {
-    "recommendation", "recommender", "retrieval", "ranking", "recsys",
-    "collaborative filtering", "click-through", "ctr", "information retrieval",
-    "llm", "large language model", "rag", "dense retrieval",
-    "retrieval-augmented", "generative retrieval", "learning to rank",
-    "search", "query", "re-ranking", "reranking", "neural retrieval",
+    "recommendation", "recommender", "recsys",
+    "collaborative filtering", "click-through", "ctr",
+    "learning to rank", "reranking", "re-ranking",
+    "information retrieval", "generative retrieval",
+    "ranking", "retrieval",
 }
 
 # ---------------------------------------------------------------------------

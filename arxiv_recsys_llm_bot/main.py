@@ -80,11 +80,16 @@ def main():
     classify_papers_with_gemini(papers, gemini_client, call_counter, max_calls)
 
     industry_papers = [p for p in papers if p.get("classification") == "industry"]
+    academia_papers = [p for p in papers if p.get("classification") == "academia"]
+    irrelevant_papers = [p for p in papers if p.get("classification") == "irrelevant"]
+    unknown_papers = [p for p in papers if p.get("classification") == "unknown"]
+    relevant_papers = [p for p in papers if p.get("classification") != "irrelevant"]
     log.info(
-        "Classification results: %d industry, %d academia, %d unknown",
+        "Classification results: %d industry, %d academia, %d irrelevant (filtered), %d unknown",
         len(industry_papers),
-        sum(1 for p in papers if p.get("classification") == "academia"),
-        sum(1 for p in papers if p.get("classification") == "unknown"),
+        len(academia_papers),
+        len(irrelevant_papers),
+        len(unknown_papers),
     )
 
     # 3. Generate summaries for industry papers
@@ -96,7 +101,7 @@ def main():
 
     # 4. Format email
     log.info("Step 4: Formatting email...")
-    html_report = format_email_html(industry_papers, len(papers), cutoff)
+    html_report = format_email_html(industry_papers, len(relevant_papers), cutoff)
 
     # 5. Save locally (always)
     report_path = save_report(html_report, industry_papers)
@@ -125,7 +130,8 @@ def main():
     s2_only = sum(1 for p in papers if p.get("source") == "s2")
     hf_count = sum(1 for p in papers if "hf" in p.get("source", ""))
     print(f"\n{'='*60}")
-    print(f"  {len(industry_papers)} industry papers found (out of {len(papers)} total)")
+    print(f"  {len(industry_papers)} industry, {len(academia_papers)} academia, "
+          f"{len(irrelevant_papers)} irrelevant (filtered)")
     print(f"  Sources: ArXiv={len(arxiv_papers)}, S2={len(s2_papers)}, HF={len(hf_papers)} (pre-dedup)")
     print(f"  After dedup: {len(papers)} unique | S2-only: {s2_only} | HF-trending: {hf_count}")
     print(f"  Gemini API calls: {call_counter['count']} / {max_calls}")
