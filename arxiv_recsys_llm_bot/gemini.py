@@ -35,11 +35,10 @@ Does **at least one author** have an affiliation with an industry company? \
 Classify based on AUTHOR AFFILIATIONS, not paper content.
 
 **How to determine author affiliation:**
-- Check author names against your knowledge of researchers at major companies
 - Look for affiliation info in the comments field (e.g. "Work done at Google")
 - Look for company email domains or explicit affiliations in abstract/comments
 - Do NOT classify as "industry" based solely on content signals like "A/B test", \
-"production system", or "deployed" — the author must actually be at a company
+"production system", or "deployed" — the author must actually be with a company
 
 **Common industry companies** (non-exhaustive): Google, DeepMind, Meta, FAIR, \
 Amazon, AWS, Microsoft, MSR, Apple, Netflix, Spotify, Alibaba, Ant Group, Tencent, \
