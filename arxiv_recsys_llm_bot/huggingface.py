@@ -40,7 +40,7 @@ def fetch_huggingface_papers() -> list[dict]:
             continue
 
         authors = [a.get("name", "") for a in (paper.get("authors") or [])]
-        upvotes = entry.get("paper", {}).get("upvotes", 0)
+        upvotes = paper.get("upvotes", 0)
         if upvotes == 0:
             upvotes = entry.get("numUpvotes", 0)
 

@@ -18,7 +18,7 @@ def load_state() -> dict:
 
 def save_state(state: dict) -> None:
     """Persist run state to disk."""
-    STATE_FILE.write_text(json.dumps(state, indent=2))
+    STATE_FILE.write_text(json.dumps(state, indent=2) + "\n")
 
 
 def get_lookback_cutoff(force_lookback_days: int | None = None) -> datetime:

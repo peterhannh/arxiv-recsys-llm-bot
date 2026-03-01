@@ -47,7 +47,7 @@ def _merge_paper(existing: dict, new: dict) -> None:
     # Union sources
     ex_sources = set(existing.get("source", "").split(","))
     new_sources = set(new.get("source", "").split(","))
-    existing["source"] = ",".join(sorted(ex_sources | new_sources - {""}))
+    existing["source"] = ",".join(sorted((ex_sources | new_sources) - {""}))
 
     # Carry over HF upvotes
     if new.get("hf_upvotes", 0) > existing.get("hf_upvotes", 0):

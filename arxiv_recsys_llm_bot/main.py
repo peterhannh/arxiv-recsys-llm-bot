@@ -128,7 +128,7 @@ def main():
 
     # Print quick summary to stdout
     s2_only = sum(1 for p in papers if p.get("source") == "s2")
-    hf_count = sum(1 for p in papers if "hf" in p.get("source", ""))
+    hf_count = sum(1 for p in papers if "hf" in p.get("source", "").split(","))
     print(f"\n{'='*60}")
     print(f"  {len(industry_papers)} industry, {len(academia_papers)} academia, "
           f"{len(irrelevant_papers)} irrelevant (filtered)")
