@@ -29,21 +29,15 @@ STATE_FILE = Path(__file__).resolve().parent.parent / "state.json"
 # ArXiv search queries — RecSys + LLM research
 # ---------------------------------------------------------------------------
 SEARCH_QUERIES = [
-    # --- Core RecSys ---
+    # --- Primary: fetch ALL cs.IR papers, let Gemini filter for relevance ---
+    "cat:cs.IR",
+
+    # --- Catch RecSys papers filed under other categories (cs.LG, cs.CL, cs.AI) ---
     'all:"recommendation system" OR all:"recommender system"',
     'all:"collaborative filtering"',
     'all:"click-through rate" OR all:"CTR prediction"',
-    'all:"learning to rank"',
-
-    # --- RecSys × LLM ---
+    'all:"generative recommendation" OR all:"generative retrieval"',
     'all:"large language model" AND all:"recommendation"',
-    'all:"LLM" AND all:"ranking"',
-    'all:"LLM" AND (all:"reranking" OR all:"re-ranking")',
-    'all:"generative recommendation"',
-
-    # --- LLM for retrieval (RecSys-adjacent) ---
-    'all:"large language model" AND all:"information retrieval"',
-    'all:"generative retrieval"',
 ]
 
 # ---------------------------------------------------------------------------
