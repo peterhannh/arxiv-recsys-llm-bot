@@ -35,8 +35,9 @@ Does **at least one author** have an affiliation with an industry company? \
 Classify based on AUTHOR AFFILIATIONS, not paper content.
 
 **How to determine author affiliation:**
-- Look for affiliation info in the comments field (e.g. "Work done at Google")
-- Look for company email domains or explicit affiliations in abstract/comments
+- Use the Affiliations field provided with each paper (sourced from Semantic Scholar)
+- Also check the comments field for affiliation info (e.g. "Work done at Google")
+- Also check for company email domains or explicit affiliations in abstract/comments
 - Do NOT classify as "industry" based solely on content signals like "A/B test", \
 "production system", or "deployed" — the author must actually be with a company
 
@@ -84,10 +85,12 @@ def classify_papers_with_gemini(
             authors_str = ", ".join(p["authors"][:15])
             abstract_snippet = p["abstract"][:400]
 
+            affiliations_str = ", ".join(p.get("affiliations", [])) or "N/A"
             prompt_parts.append(
                 f"Paper {i}:\n"
                 f"  Title: {p['title']}\n"
                 f"  Authors: {authors_str}\n"
+                f"  Affiliations: {affiliations_str}\n"
                 f"  Abstract: {abstract_snippet}\n"
                 f"  Comment: {p.get('comment', '')}\n"
             )

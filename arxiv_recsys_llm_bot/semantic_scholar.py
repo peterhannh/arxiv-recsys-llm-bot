@@ -96,3 +96,71 @@ def fetch_semantic_scholar_papers(cutoff: datetime) -> list[dict]:
 
     log.info("S2: fetched %d unique papers since %s", len(papers), cutoff_str)
     return papers
+
+
+# ---------------------------------------------------------------------------
+# Batch affiliation enrichment (called after dedup, before classification)
+# ---------------------------------------------------------------------------
+S2_BATCH_URL = "https://api.semanticscholar.org/graph/v1/paper/batch"
+S2_BATCH_FIELDS = "authors,authors.affiliations"
+S2_BATCH_SIZE = 100  # S2 allows up to 500, but 100 is safer
+
+
+def enrich_papers_with_affiliations(papers: list[dict]) -> None:
+    """Batch-fetch author affiliations from Semantic Scholar and attach to papers."""
+    headers = {"Content-Type": "application/json"}
+    if S2_API_KEY:
+        headers["x-api-key"] = S2_API_KEY
+
+    # Build S2 lookup IDs: prefer ArXiv ID, fall back to S2 paper ID
+    lookup_ids: list[str] = []
+    paper_index_map: list[int] = []  # parallel to lookup_ids
+    for i, p in enumerate(papers):
+        pid = p.get("id", "")
+        if pid.startswith("s2:"):
+            lookup_ids.append(pid[3:])  # raw S2 paper ID
+        elif pid:
+            lookup_ids.append(f"ARXIV:{pid}")
+        else:
+            continue
+        paper_index_map.append(i)
+
+    if not lookup_ids:
+        return
+
+    enriched = 0
+    for batch_start in range(0, len(lookup_ids), S2_BATCH_SIZE):
+        batch_ids = lookup_ids[batch_start : batch_start + S2_BATCH_SIZE]
+        batch_indices = paper_index_map[batch_start : batch_start + S2_BATCH_SIZE]
+
+        try:
+            resp = requests.post(
+                S2_BATCH_URL,
+                params={"fields": S2_BATCH_FIELDS},
+                json={"ids": batch_ids},
+                headers=headers,
+                timeout=30,
+            )
+            resp.raise_for_status()
+            results = resp.json()
+        except requests.RequestException as e:
+            log.warning("S2 batch affiliation lookup failed: %s", e)
+            continue
+
+        for item, paper_idx in zip(results, batch_indices):
+            if item is None:
+                continue
+            affiliations = set()
+            for author in item.get("authors") or []:
+                for aff in author.get("affiliations") or []:
+                    aff = aff.strip()
+                    if aff:
+                        affiliations.add(aff)
+            if affiliations:
+                papers[paper_idx]["affiliations"] = sorted(affiliations)
+                enriched += 1
+
+        if batch_start + S2_BATCH_SIZE < len(lookup_ids):
+            time.sleep(QUERY_DELAY)
+
+    log.info("S2 enrichment: added affiliations to %d / %d papers", enriched, len(papers))

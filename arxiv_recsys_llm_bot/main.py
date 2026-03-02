@@ -14,7 +14,10 @@ from arxiv_recsys_llm_bot.formatter import format_email_html
 from arxiv_recsys_llm_bot.gemini import classify_papers_with_gemini, generate_summaries
 from arxiv_recsys_llm_bot.huggingface import fetch_huggingface_papers
 from arxiv_recsys_llm_bot.output import save_report, send_email
-from arxiv_recsys_llm_bot.semantic_scholar import fetch_semantic_scholar_papers
+from arxiv_recsys_llm_bot.semantic_scholar import (
+    enrich_papers_with_affiliations,
+    fetch_semantic_scholar_papers,
+)
 from arxiv_recsys_llm_bot.state import get_lookback_cutoff, save_state
 
 
@@ -73,6 +76,10 @@ def main():
     if not papers:
         log.info("No papers found since cutoff. State NOT updated (will retry same window next run).")
         return
+
+    # 1e. Enrich with author affiliations from Semantic Scholar
+    log.info("Step 1e: Fetching author affiliations from Semantic Scholar...")
+    enrich_papers_with_affiliations(papers)
 
     # 2. Classify with Gemini
     log.info("Step 2: Classifying %d papers with Gemini...", len(papers))
