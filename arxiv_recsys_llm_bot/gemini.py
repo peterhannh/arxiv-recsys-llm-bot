@@ -35,8 +35,6 @@ Does **at least one author** have an affiliation with an industry company? \
 Classify based on AUTHOR AFFILIATIONS, not paper content.
 
 **How to determine author affiliation:**
-- Check author names against your knowledge of well-known researchers at major \
-companies — many industry researchers in RecSys, IR, and LLM publish actively
 - Look for affiliation info in the comments field (e.g. "Work done at Google")
 - Look for company email domains or explicit affiliations in abstract/comments
 - Do NOT classify as "industry" based solely on content signals like "A/B test", \
