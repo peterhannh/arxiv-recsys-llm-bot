@@ -65,7 +65,7 @@ def _merge_paper(existing: dict, new: dict) -> None:
 def deduplicate_papers(papers: list[dict]) -> list[dict]:
     """Deduplicate papers using ArXiv ID, DOI, and normalized title.
 
-    Papers should be ordered by source priority (ArXiv first, then S2, then HF).
+    Papers should be ordered by source priority (ArXiv first, then HF).
     The first occurrence is kept as the primary record; later duplicates are merged in.
     """
     seen_arxiv: dict[str, int] = {}   # normalized arxiv_id -> index in result
@@ -76,7 +76,7 @@ def deduplicate_papers(papers: list[dict]) -> list[dict]:
     for paper in papers:
         # Layer 1: ArXiv ID
         arxiv_id = normalize_arxiv_id(paper.get("id", ""))
-        if arxiv_id and not arxiv_id.startswith("s2:"):
+        if arxiv_id:
             if arxiv_id in seen_arxiv:
                 _merge_paper(result[seen_arxiv[arxiv_id]], paper)
                 continue
@@ -99,7 +99,7 @@ def deduplicate_papers(papers: list[dict]) -> list[dict]:
         idx = len(result)
         result.append(paper)
 
-        if arxiv_id and not arxiv_id.startswith("s2:"):
+        if arxiv_id:
             seen_arxiv[arxiv_id] = idx
         if doi:
             seen_doi[doi] = idx

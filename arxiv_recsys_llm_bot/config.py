@@ -13,9 +13,6 @@ RECIPIENT_EMAIL = os.environ.get("RECIPIENT_EMAIL", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "")
 GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
 
-# Semantic Scholar API key (optional — works without it but rate limits are lower)
-S2_API_KEY = os.environ.get("S2_API_KEY", "")
-
 # Max Gemini API calls allowed (hard cap)
 MAX_GEMINI_CALLS = int(os.environ.get("MAX_GEMINI_CALLS", "80"))
 
@@ -29,38 +26,39 @@ STATE_FILE = Path(__file__).resolve().parent.parent / "state.json"
 # ArXiv search queries — RecSys + LLM research
 # ---------------------------------------------------------------------------
 SEARCH_QUERIES = [
-    # --- Primary: fetch ALL cs.IR papers, let Gemini filter for relevance ---
-    "cat:cs.IR",
-
-    # --- Catch RecSys papers filed under other categories (cs.LG, cs.CL, cs.AI) ---
+    # --- Recommendation Systems ---
     'all:"recommendation system" OR all:"recommender system"',
     'all:"collaborative filtering"',
     'all:"click-through rate" OR all:"CTR prediction"',
-    'all:"generative recommendation" OR all:"generative retrieval"',
-    'all:"large language model" AND all:"recommendation"',
-]
+    'all:"learning to rank"',
+    'all:"information retrieval" AND cat:cs.IR',
 
-# ---------------------------------------------------------------------------
-# Semantic Scholar search queries (broader text search, fewer queries needed)
-# ---------------------------------------------------------------------------
-S2_SEARCH_QUERIES = [
-    "recommendation system OR recommender system",
-    "collaborative filtering OR click-through rate prediction",
-    "learning to rank",
-    "large language model recommendation OR LLM ranking",
-    "LLM reranking OR generative recommendation",
-    "large language model information retrieval OR generative retrieval",
+    # --- LLM + RecSys / Ranking / Retrieval ---
+    'all:"large language model" AND all:"recommendation"',
+    'all:"LLM" AND all:"ranking"',
+    'all:"large language model" AND all:"retrieval"',
+
+    # --- RAG & Generative Retrieval ---
+    'all:"retrieval-augmented generation"',
+    'all:"generative retrieval"',
+
+    # --- Dense / Neural Retrieval ---
+    'all:"dense retrieval"',
+    'all:"neural information retrieval"',
+
+    # --- LLM as Judge / Evaluator for ranking ---
+    'all:"LLM" AND all:"relevance" AND all:"search"',
 ]
 
 # ---------------------------------------------------------------------------
 # HuggingFace Daily Papers — relevance filter keywords
 # ---------------------------------------------------------------------------
 HF_RELEVANCE_KEYWORDS = {
-    "recommendation", "recommender", "recsys",
-    "collaborative filtering", "click-through", "ctr",
-    "learning to rank", "reranking", "re-ranking",
-    "information retrieval", "generative retrieval",
-    "ranking", "retrieval",
+    "recommendation", "recommender", "retrieval", "ranking", "recsys",
+    "collaborative filtering", "click-through", "ctr", "information retrieval",
+    "llm", "large language model", "rag", "dense retrieval",
+    "retrieval-augmented", "generative retrieval", "learning to rank",
+    "search", "query", "re-ranking", "reranking", "neural retrieval",
 }
 
 # ---------------------------------------------------------------------------

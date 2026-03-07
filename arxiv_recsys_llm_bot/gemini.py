@@ -12,34 +12,23 @@ from arxiv_recsys_llm_bot.config import BATCH_SIZE, GEMINI_MODEL, MAX_GEMINI_CAL
 # Classification prompt
 # ---------------------------------------------------------------------------
 CLASSIFICATION_SYSTEM_PROMPT = """\
-You are an expert at classifying academic papers. Given a batch of papers, perform \
-TWO checks for each paper:
+You are an expert at classifying whether academic papers come from industry or academia.
 
-## Step A — Relevance gate
+Given a batch of papers with their metadata, classify each one.
 
-Is this paper about ONE of the following topics?
-1. **Recommendation systems** (collaborative filtering, CTR prediction, session-based \
-recommendations, sequential recommendation, conversational recommendation, etc.)
-2. **RecSys × LLM** (using large language models for recommendations, LLM-based ranking \
-or scoring in recommender systems, prompt-based recommendations, etc.)
-3. **LLM research with direct applications to ranking/retrieval for recommendations** \
-(learning to rank, re-ranking with LLMs, generative retrieval for recommendations, etc.)
+## Classification rules (in priority order):
 
-If the paper is NOT about any of these topics, mark it as `"relevant": false`. \
-Papers about generic NLP, computer vision, speech, pure information extraction, \
-general RAG without a recommendation angle, or other unrelated topics are NOT relevant.
+1. **Recognize industry authors**: Use your knowledge of well-known researchers and \
+their current affiliations. Many authors at major tech companies publish actively in \
+recommendation systems, information retrieval, NLP, and LLM research.
 
-## Step B — Industry affiliation (only for relevant papers)
+2. **Check paper content for industry signals**:
+   - Author email domains or affiliations mentioned in the abstract or comments
+   - Mentions of company names, products, or platforms
+   - Phrases like "deployed at", "A/B test", "serving N million users", "production"
+   - Results on proprietary/internal datasets or live traffic experiments
 
-Does **at least one author** have an affiliation with an industry company? \
-Classify based on AUTHOR AFFILIATIONS, not paper content.
-
-**How to determine author affiliation:**
-- Use the Affiliations field provided with each paper
-- Also check the comments field for affiliation info (e.g. "Work done at Google")
-- Also check for company email domains or explicit affiliations in abstract/comments
-
-**Common industry companies** (non-exhaustive): Google, DeepMind, Meta, FAIR, \
+3. **Common industry companies** (non-exhaustive): Google, DeepMind, Meta, FAIR, \
 Amazon, AWS, Microsoft, MSR, Apple, Netflix, Spotify, Alibaba, Ant Group, Tencent, \
 ByteDance, TikTok, Douyin, Huawei, JD.com, Baidu, LinkedIn, Pinterest, Uber, \
 Airbnb, eBay, Yahoo, Snap, Twitter/X, NVIDIA, Samsung, Adobe, Salesforce, \
@@ -47,14 +36,15 @@ Kuaishou, Meituan, Shopee, Grab, Yandex, Criteo, Booking, PayPal, Bloomberg, \
 IBM Research, Walmart, Instacart, DoorDash, Lyft, Roku, Etsy, Cohere, \
 OpenAI, Anthropic, Mistral, AI21 Labs, Character.AI, etc.
 
+4. **Default to "academia"** when there are no industry signals at all.
+
+5. **Use "unknown" only as a last resort** — this should be very rare.
+
 ## Output format:
 Respond with ONLY a JSON array. Each element:
-  {"paper_index": <int>, "relevant": true|false, \
-"classification": "industry"|"academia"|"unknown", \
-"company": "<specific company name(s) if industry, empty string otherwise>", \
-"reason": "<brief reason for relevance and classification decisions>"}
-
-For irrelevant papers, set classification to "irrelevant" and company to "".
+  {"paper_index": <int>, "classification": "industry"|"academia"|"unknown", \
+"company": "<specific company name(s) separated by commas if industry, empty string otherwise>", \
+"reason": "<brief reason for classification>"}
 """
 
 
@@ -83,12 +73,10 @@ def classify_papers_with_gemini(
             authors_str = ", ".join(p["authors"][:15])
             abstract_snippet = p["abstract"][:400]
 
-            affiliations_str = ", ".join(p.get("affiliations", [])) or "N/A"
             prompt_parts.append(
                 f"Paper {i}:\n"
                 f"  Title: {p['title']}\n"
                 f"  Authors: {authors_str}\n"
-                f"  Affiliations: {affiliations_str}\n"
                 f"  Abstract: {abstract_snippet}\n"
                 f"  Comment: {p.get('comment', '')}\n"
             )
@@ -133,13 +121,8 @@ def classify_papers_with_gemini(
             for item in classifications:
                 idx = item.get("paper_index", -1)
                 if 0 <= idx < len(batch):
-                    relevant = item.get("relevant", True)
-                    if not relevant:
-                        batch[idx]["classification"] = "irrelevant"
-                        batch[idx]["company"] = ""
-                    else:
-                        batch[idx]["classification"] = item.get("classification", "unknown")
-                        batch[idx]["company"] = item.get("company", "")
+                    batch[idx]["classification"] = item.get("classification", "unknown")
+                    batch[idx]["company"] = item.get("company", "")
                     batch[idx]["classification_reason"] = item.get("reason", "")
 
         except json.JSONDecodeError as e:

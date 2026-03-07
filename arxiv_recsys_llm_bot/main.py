@@ -14,10 +14,6 @@ from arxiv_recsys_llm_bot.formatter import format_email_html
 from arxiv_recsys_llm_bot.gemini import classify_papers_with_gemini, generate_summaries
 from arxiv_recsys_llm_bot.huggingface import fetch_huggingface_papers
 from arxiv_recsys_llm_bot.output import save_report, send_email
-from arxiv_recsys_llm_bot.semantic_scholar import (
-    enrich_papers_with_affiliations,
-    fetch_semantic_scholar_papers,
-)
 from arxiv_recsys_llm_bot.state import get_lookback_cutoff, save_state
 
 
@@ -58,28 +54,20 @@ def main():
     log.info("Step 1a: Fetching papers from ArXiv...")
     arxiv_papers = fetch_recent_papers(cutoff)
 
-    # 1b. Fetch papers from Semantic Scholar
-    log.info("Step 1b: Fetching papers from Semantic Scholar...")
-    s2_papers = fetch_semantic_scholar_papers(cutoff)
-
-    # 1c. Fetch papers from HuggingFace Daily Papers
-    log.info("Step 1c: Fetching papers from HuggingFace Daily Papers...")
+    # 1b. Fetch papers from HuggingFace Daily Papers
+    log.info("Step 1b: Fetching papers from HuggingFace Daily Papers...")
     hf_papers = fetch_huggingface_papers()
 
-    # 1d. Combine + deduplicate (ArXiv first for richest metadata, then S2, then HF)
-    log.info("Step 1d: Deduplicating papers...")
-    all_raw = arxiv_papers + s2_papers + hf_papers
-    log.info("Pre-dedup counts: ArXiv=%d, S2=%d, HF=%d, total=%d",
-             len(arxiv_papers), len(s2_papers), len(hf_papers), len(all_raw))
+    # 1c. Combine + deduplicate (ArXiv first for richest metadata, then HF)
+    log.info("Step 1c: Deduplicating papers...")
+    all_raw = arxiv_papers + hf_papers
+    log.info("Pre-dedup counts: ArXiv=%d, HF=%d, total=%d",
+             len(arxiv_papers), len(hf_papers), len(all_raw))
     papers = deduplicate_papers(all_raw)
 
     if not papers:
         log.info("No papers found since cutoff. State NOT updated (will retry same window next run).")
         return
-
-    # 1e. Enrich with author affiliations from Semantic Scholar
-    log.info("Step 1e: Fetching author affiliations from Semantic Scholar...")
-    enrich_papers_with_affiliations(papers)
 
     # 2. Classify with Gemini
     log.info("Step 2: Classifying %d papers with Gemini...", len(papers))
@@ -87,16 +75,11 @@ def main():
     classify_papers_with_gemini(papers, gemini_client, call_counter, max_calls)
 
     industry_papers = [p for p in papers if p.get("classification") == "industry"]
-    academia_papers = [p for p in papers if p.get("classification") == "academia"]
-    irrelevant_papers = [p for p in papers if p.get("classification") == "irrelevant"]
-    unknown_papers = [p for p in papers if p.get("classification") == "unknown"]
-    relevant_papers = [p for p in papers if p.get("classification") != "irrelevant"]
     log.info(
-        "Classification results: %d industry, %d academia, %d irrelevant (filtered), %d unknown",
+        "Classification results: %d industry, %d academia, %d unknown",
         len(industry_papers),
-        len(academia_papers),
-        len(irrelevant_papers),
-        len(unknown_papers),
+        sum(1 for p in papers if p.get("classification") == "academia"),
+        sum(1 for p in papers if p.get("classification") == "unknown"),
     )
 
     # 3. Generate summaries for industry papers
@@ -108,7 +91,7 @@ def main():
 
     # 4. Format email
     log.info("Step 4: Formatting email...")
-    html_report = format_email_html(industry_papers, len(relevant_papers), cutoff)
+    html_report = format_email_html(industry_papers, len(papers), cutoff)
 
     # 5. Save locally (always)
     report_path = save_report(html_report, industry_papers)
@@ -134,13 +117,11 @@ def main():
         log.info("State updated: next run will pick up from %s", datetime.now(timezone.utc).date())
 
     # Print quick summary to stdout
-    s2_only = sum(1 for p in papers if p.get("source") == "s2")
-    hf_count = sum(1 for p in papers if "hf" in p.get("source", "").split(","))
+    hf_count = sum(1 for p in papers if "hf" in p.get("source", ""))
     print(f"\n{'='*60}")
-    print(f"  {len(industry_papers)} industry, {len(academia_papers)} academia, "
-          f"{len(irrelevant_papers)} irrelevant (filtered)")
-    print(f"  Sources: ArXiv={len(arxiv_papers)}, S2={len(s2_papers)}, HF={len(hf_papers)} (pre-dedup)")
-    print(f"  After dedup: {len(papers)} unique | S2-only: {s2_only} | HF-trending: {hf_count}")
+    print(f"  {len(industry_papers)} industry papers found (out of {len(papers)} total)")
+    print(f"  Sources: ArXiv={len(arxiv_papers)}, HF={len(hf_papers)} (pre-dedup)")
+    print(f"  After dedup: {len(papers)} unique | HF-trending: {hf_count}")
     print(f"  Gemini API calls: {call_counter['count']} / {max_calls}")
     print(f"  Report: {report_path}")
     print(f"{'='*60}\n")
